@@ -1,16 +1,20 @@
 [
   {
     "id": 1,
-    "name": "Иван Иванов",
-    "email": "ivan@example.com",
-    "mobile": "+7 900 111-11-11",
-    "work": "+7 495 111-11-11"
+    "name": "Alina Minina",
+    "email": "alinksmi@mail.ru",
+    "phone": "+7 900 111-11-11"
   },
   {
     "id": 2,
-    "name": "Пётр Петров",
-    "email": "petr@example.com",
-    "mobile": "+7 900 222-22-22",
-    "work": "+7 495 222-22-22"
+    "name": "Andrey Kulikov",
+    "email": "kulik@gmail.com",
+    "phone": "+7 900 222-22-22"
+  },
+  {
+    "id": 3,
+    "name": "Roman Viloshkin",
+    "email": "vilrom@sutulaya.com",
+    "phone": "+7 900 333-33-33"
   }
 ]
