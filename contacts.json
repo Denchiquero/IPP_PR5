@@ -3,18 +3,18 @@
     "id": 1,
     "name": "Alina Minina",
     "email": "alinksmi@mail.ru",
-    "phone": "+7 900 111-11-11"
+    "mobile": "+7 900 111-11-11"
   },
   {
     "id": 2,
     "name": "Andrey Kulikov",
     "email": "kulik@gmail.com",
-    "phone": "+7 900 222-22-22"
+    "mobile": "+7 900 222-22-22"
   },
   {
     "id": 3,
     "name": "Roman Viloshkin",
     "email": "vilrom@sutulaya.com",
-    "phone": "+7 900 333-33-33"
+    "mobile": "+7 900 333-33-33"
   }
 ]
