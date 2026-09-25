@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Телефонные контакты</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 30px auto; padding: 0 16px; }
+    h1 { margin-bottom: 8px; }
+    .hint { color: #555; margin-bottom: 20px; }
+    form, .contact { border: 1px solid #ccc; border-radius: 8px; padding: 14px; margin-bottom: 12px; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    input { box-sizing: border-box; width: 100%; padding: 9px; }
+    button { padding: 8px 12px; cursor: pointer; margin-right: 6px; }
+    .actions { margin-top: 10px; }
+    .error { color: #b00020; margin: 10px 0; }
+    .empty { color: #666; }
+    @media (max-width: 650px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <h1>Телефонные контакты</h1>
+  <div class="hint">Практическая работа №5 — REST API CRUD на Node.js</div>
+
+  <form id="form">
+    <div class="grid">
+      <input id="name" placeholder="Имя" required>
+      <input id="email" type="email" placeholder="Email" required>
+      <input id="mobile" placeholder="Мобильный телефон" required>
+      <input id="work" placeholder="Рабочий телефон">
+    </div>
+    <div class="actions">
+      <button type="submit">Добавить контакт</button>
+      <button type="button" id="cancel" hidden>Отмена</button>
+    </div>
+  </form>
+
+  <div id="error" class="error"></div>
+  <div id="contacts"></div>
+
+  <script>
+    const api = '/api/contacts';
+    let editingId = null;
+
+    const form = document.getElementById('form');
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const mobileInput = document.getElementById('mobile');
+    const workInput = document.getElementById('work');
+    const cancelButton = document.getElementById('cancel');
+    const contactsContainer = document.getElementById('contacts');
+    const errorBox = document.getElementById('error');
+
+    function showError(message = '') {
+      errorBox.textContent = message;
+    }
+
+    async function request(url, options = {}) {
+      const response = await fetch(url, options);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Ошибка запроса');
+      return data;
+    }
+
+    function resetForm() {
+      editingId = null;
+      form.reset();
+      form.querySelector('button[type="submit"]').textContent = 'Добавить контакт';
+      cancelButton.hidden = true;
+    }
+
+    async function loadContacts() {
+      try {
+        showError();
+        const contacts = await request(api);
+        contactsContainer.innerHTML = '';
+
+        if (contacts.length === 0) {
+          const text = document.createElement('p');
+          text.className = 'empty';
+          text.textContent = 'Контактов пока нет.';
+          contactsContainer.appendChild(text);
+          return;
+        }
+
+        for (const contact of contacts) {
+          const card = document.createElement('div');
+          card.className = 'contact';
+
+          const title = document.createElement('strong');
+          title.textContent = contact.name;
+          card.appendChild(title);
+
+          const info = document.createElement('div');
+          info.textContent = `${contact.email} | моб.: ${contact.mobile} | раб.: ${contact.work || '—'}`;
+          card.appendChild(info);
+
+          const actions = document.createElement('div');
+          actions.className = 'actions';
+
+          const edit = document.createElement('button');
+          edit.textContent = 'Изменить';
+          edit.onclick = () => startEdit(contact);
+
+          const del = document.createElement('button');
+          del.textContent = 'Удалить';
+          del.onclick = () => deleteContact(contact.id);
+
+          actions.append(edit, del);
+          card.appendChild(actions);
+          contactsContainer.appendChild(card);
+        }
+      } catch (error) {
+        showError(error.message);
+      }
+    }
+
+    function startEdit(contact) {
+      editingId = contact.id;
+      nameInput.value = contact.name;
+      emailInput.value = contact.email;
+      mobileInput.value = contact.mobile;
+      workInput.value = contact.work || '';
+      form.querySelector('button[type="submit"]').textContent = 'Сохранить изменения';
+      cancelButton.hidden = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function deleteContact(id) {
+      try {
+        await request(`${api}/${id}`, { method: 'DELETE' });
+        if (editingId === id) resetForm();
+        await loadContacts();
+      } catch (error) {
+        showError(error.message);
+      }
+    }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      showError();
+
+      const body = JSON.stringify({
+        name: nameInput.value,
+        email: emailInput.value,
+        mobile: mobileInput.value,
+        work: workInput.value
+      });
+
+      try {
+        if (editingId === null) {
+          await request(api, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body
+          });
+        } else {
+          await request(`${api}/${editingId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body
+          });
+        }
+
+        resetForm();
+        await loadContacts();
+      } catch (error) {
+        showError(error.message);
+      }
+    });
+
+    cancelButton.addEventListener('click', resetForm);
+    loadContacts();
+  </script>
+</body>
+</html>
