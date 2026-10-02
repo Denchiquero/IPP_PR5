@@ -5,7 +5,7 @@ let database;
 
 async function connectToDatabase() {
   const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
-  const databaseName = process.env.MONGODB_DB || 'contacts_app';
+  const databaseName = process.env.MONGODB_DB || 'contacts';
 
   client = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
   await client.connect();
