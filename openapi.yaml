@@ -1,0 +1,214 @@
+openapi: 3.0.3
+info:
+  title: API телефонных контактов
+  version: 2.0.0
+  description: |
+    REST API практических работ №5–6. Данные хранятся в MongoDB.
+    Интерфейс поддерживает полный набор CRUD-операций для телефонных контактов.
+  license:
+    name: MIT
+servers:
+  - url: /
+    description: Текущий сервер (локальный или облачный)
+tags:
+  - name: Contacts
+    description: Управление телефонными контактами
+  - name: Service
+    description: Служебные методы
+paths:
+  /health:
+    get:
+      tags: [Service]
+      summary: Проверить состояние приложения и MongoDB
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Приложение и база данных доступны
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+              example:
+                status: ok
+                database: connected
+        '503':
+          description: База данных недоступна
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/contacts:
+    get:
+      tags: [Contacts]
+      summary: Получить все контакты
+      operationId: listContacts
+      responses:
+        '200':
+          description: Список контактов, отсортированный по имени
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contact'
+              example:
+                - id: 6512e31eb01c412b5489c721
+                  name: Иван Иванов
+                  email: ivan@example.com
+                  mobile: +7 900 111-11-11
+                  work: +7 495 111-11-11
+    post:
+      tags: [Contacts]
+      summary: Создать контакт
+      operationId: createContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactInput'
+            example:
+              name: Анна Смирнова
+              email: anna@example.com
+              mobile: +7 900 333-33-33
+              work: +7 495 333-33-33
+      responses:
+        '201':
+          description: Контакт создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/contacts/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ContactId'
+    get:
+      tags: [Contacts]
+      summary: Получить контакт по идентификатору
+      operationId: getContact
+      responses:
+        '200':
+          description: Найденный контакт
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Contacts]
+      summary: Полностью обновить контакт
+      operationId: updateContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactInput'
+            example:
+              name: Иван Иванов
+              email: ivan.new@example.com
+              mobile: +7 900 999-99-99
+              work: +7 495 111-11-11
+      responses:
+        '200':
+          description: Контакт обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Contacts]
+      summary: Удалить контакт
+      operationId: deleteContact
+      responses:
+        '200':
+          description: Удалённый контакт
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    ContactId:
+      name: id
+      in: path
+      required: true
+      description: Идентификатор ObjectId из MongoDB
+      schema:
+        type: string
+        pattern: '^[a-fA-F0-9]{24}$'
+      example: 6512e31eb01c412b5489c721
+  responses:
+    BadRequest:
+      description: Некорректные данные запроса
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Заполните обязательные поля: email'
+    NotFound:
+      description: Контакт не найден
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Контакт не найден
+  schemas:
+    ContactInput:
+      type: object
+      additionalProperties: false
+      required: [name, email, mobile]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          example: Иван Иванов
+        email:
+          type: string
+          format: email
+          minLength: 1
+          example: ivan@example.com
+        mobile:
+          type: string
+          minLength: 1
+          example: +7 900 111-11-11
+        work:
+          type: string
+          example: +7 495 111-11-11
+    Contact:
+      allOf:
+        - type: object
+          required: [id]
+          properties:
+            id:
+              type: string
+              description: Идентификатор ObjectId из MongoDB
+              example: 6512e31eb01c412b5489c721
+        - $ref: '#/components/schemas/ContactInput'
+    Health:
+      type: object
+      required: [status, database]
+      properties:
+        status:
+          type: string
+          example: ok
+        database:
+          type: string
+          example: connected
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
